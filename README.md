@@ -30,8 +30,8 @@ using UnityEngine;
 
 public class WebSocketDemo : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
 
         // Create WebSocket instance
         WebSocket ws = WebSocketFactory.CreateInstance("ws://echo.websocket.org");
@@ -69,11 +69,11 @@ public class WebSocketDemo : MonoBehaviour {
         ws.Connect();
 
     }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    
+    // Update is called once per frame
+    void Update () {
+        
+    }
 }
 ```
 
