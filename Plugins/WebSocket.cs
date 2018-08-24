@@ -56,7 +56,7 @@ public interface IWebSocket
 /*
  * WebSocket class bound to JSLIB
  */
-public class WebSocketWrapperJS: IWebSocket
+public class WebSocket: IWebSocket
 {
 
     /* WebSocket JSLIB functions */
@@ -84,7 +84,7 @@ public class WebSocketWrapperJS: IWebSocket
     /*
      * Constructor - receive JSLIB instance id of allocated socket
      */
-    public WebSocketWrapperJS(int instanceId)
+    public WebSocket(int instanceId)
     {
 
         this.instanceId = instanceId;
@@ -94,7 +94,7 @@ public class WebSocketWrapperJS: IWebSocket
     /*
      * Destructor - notifies WebSocketFactory about it to remove JSLIB references
      */
-    ~WebSocketWrapperJS()
+    ~WebSocket()
     {
         WebSocketFactory.HandleInstanceDestroy(this.instanceId);
     }
@@ -211,7 +211,7 @@ public class WebSocketWrapperJS: IWebSocket
 
 }
 #else
-public class WebSocketWrapperSharp : IWebSocket
+public class WebSocket : IWebSocket
 {
     /* Events */
     public event WebSocketOnOpen OnOpen;
@@ -225,7 +225,7 @@ public class WebSocketWrapperSharp : IWebSocket
     /*
      * WebSocket constructor
      */
-    public WebSocketWrapperSharp(string url)
+    public WebSocket(string url)
     {
 
         // Create WebSocket instance
@@ -325,7 +325,7 @@ public static class WebSocketFactory
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     /* Map of websocket instances */
-    private static Dictionary<Int32, WebSocketWrapperJS> instances = new Dictionary<Int32, WebSocketWrapperJS>();
+    private static Dictionary<Int32, WebSocket> instances = new Dictionary<Int32, WebSocket>();
 
     /* Delegates */
     public delegate void OnOpenCallback(int instanceId);
@@ -386,7 +386,7 @@ public static class WebSocketFactory
     public static void DelegateOnOpenEvent(int instanceId)
     {
 
-        WebSocketWrapperJS instanceRef;
+        WebSocket instanceRef;
 
         if (instances.TryGetValue(instanceId, out instanceRef))
         {
@@ -399,7 +399,7 @@ public static class WebSocketFactory
     public static void DelegateOnMessageEvent(int instanceId, System.IntPtr msgPtr, int msgSize)
     {
 
-        WebSocketWrapperJS instanceRef;
+        WebSocket instanceRef;
 
         if (instances.TryGetValue(instanceId, out instanceRef))
         {
@@ -415,7 +415,7 @@ public static class WebSocketFactory
     public static void DelegateOnErrorEvent(int instanceId, System.IntPtr errorPtr)
     {
 
-        WebSocketWrapperJS instanceRef;
+        WebSocket instanceRef;
 
         if (instances.TryGetValue(instanceId, out instanceRef))
         {
@@ -431,7 +431,7 @@ public static class WebSocketFactory
     public static void DelegateOnCloseEvent(int instanceId)
     {
 
-        WebSocketWrapperJS instanceRef;
+        WebSocket instanceRef;
 
         if (instances.TryGetValue(instanceId, out instanceRef))
         {
@@ -444,19 +444,19 @@ public static class WebSocketFactory
     /*
      * Create WebSocket client instance
      */
-    public static IWebSocket CreateInstance(string url)
+    public static WebSocket CreateInstance(string url)
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         if (!isInitialized)
             Initialize();
 
         int instanceId = WebSocketAllocate(url);
-        WebSocketWrapperJS wrapper = new WebSocketWrapperJS(instanceId);
+        WebSocket wrapper = new WebSocket(instanceId);
         instances.Add(instanceId, wrapper);
 
         return wrapper;
 #else
-        return new WebSocketWrapperSharp(url);
+        return new WebSocket(url);
 #endif
     }
 

@@ -9,7 +9,7 @@ public class WebSocketDemo : MonoBehaviour {
 	void Start () {
 
         // Create WebSocket instance
-        IWebSocket ws = WebSocketFactory.CreateInstance("ws://echo.websocket.org");
+        WebSocket ws = WebSocketFactory.CreateInstance("ws://echo.websocket.org");
 
         // Add OnOpen event listener
         ws.OnOpen += () =>
