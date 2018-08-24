@@ -77,6 +77,12 @@ public class WebSocketDemo : MonoBehaviour {
 }
 ```
 
+## TO-DO
+
+- Error reporting from JSLIB implementation. For now exceptions are thrown only from `WebSocketSharp` library. JSLIB implementation throws errors directly in JS and probably they cannot be caughted in C# right now.
+
+- OnClose event code is not available in C# implementation.
+
 ## License Apache 2.0
 
 Copyright 2018 Jiri Hybek <jiri@hybek.cz>
