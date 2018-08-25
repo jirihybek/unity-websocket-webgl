@@ -28,6 +28,9 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
+// Use plugin namespace
+using HybridWebSocket;
+
 public class WebSocketDemo : MonoBehaviour {
 
     // Use this for initialization
@@ -60,9 +63,9 @@ public class WebSocketDemo : MonoBehaviour {
         };
 
         // Add OnClose event listener
-        ws.OnClose += () =>
+        ws.OnClose += (WebSocketCloseCode code) =>
         {
-            Debug.Log("WS closed.");
+            Debug.Log("WS closed with code: " + code.ToString());
         };
 
         // Connect to the server
@@ -77,11 +80,9 @@ public class WebSocketDemo : MonoBehaviour {
 }
 ```
 
-## TO-DO
+## Error Handling
 
-- Error reporting from JSLIB implementation. For now exceptions are thrown only from `WebSocketSharp` library. JSLIB implementation throws errors directly in JS and probably they cannot be caughted in C# right now.
-
-- OnClose event code is not available in C# implementation.
+When any error occours during method call then the `WebSocketException` is thrown. Unified both for native and browser client so you can catch it in your C# code.
 
 ## License Apache 2.0
 

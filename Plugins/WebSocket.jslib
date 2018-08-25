@@ -104,7 +104,7 @@ var LibraryWebSocket = {
 
 		var instance = webSocketState.instances[instanceId];
 
-		if (!instance) return;
+		if (!instance) return 0;
 
 		// Close if not closed
 		if (instance.ws !== null && instance.ws.readyState < 2)
@@ -112,6 +112,8 @@ var LibraryWebSocket = {
 
 		// Remove reference
 		delete webSocketState.instances[instanceId];
+
+		return 0;
 
 	},
 
@@ -123,10 +125,10 @@ var LibraryWebSocket = {
 	WebSocketConnect: function(instanceId) {
 
 		var instance = webSocketState.instances[instanceId];
-		if (!instance) throw new Error("Instance not found.");
+		if (!instance) return -1;
 
 		if (instance.ws !== null)
-			throw new Error("Instance is already connected or in connecting state.");
+			return -2;
 
 		instance.ws = new WebSocket(instance.url);
 
@@ -170,12 +172,16 @@ var LibraryWebSocket = {
 
 		};
 
-		instance.ws.onclose = function() {
+		instance.ws.onclose = function(ev) {
 
 			if (webSocketState.onClose)
-				Runtime.dynCall('vi', webSocketState.onClose, [ instanceId ]);
+				Runtime.dynCall('vii', webSocketState.onClose, [ instanceId, ev.code ]);
+
+			delete instance.ws;
 
 		};
+
+		return 0;
 
 	},
 
@@ -187,18 +193,20 @@ var LibraryWebSocket = {
 	WebSocketClose: function(instanceId) {
 
 		var instance = webSocketState.instances[instanceId];
-		if (!instance) throw new Error("Instance not found.");
+		if (!instance) return -1;
 
 		if (instance.ws === null)
-			throw new Error("WebSocket is not connected.");
+			return -3;
 
 		if (instance.ws.readyState === 2)
-			throw new Error("WebSocket is already closing.");
+			return -4;
 
 		if (instance.ws.readyState === 3)
-			throw new Error("WebSocket is already closed.");
+			return -5;
 
 		instance.ws.close();
+
+		return 0;
 
 	},
 
@@ -212,15 +220,17 @@ var LibraryWebSocket = {
 	WebSocketSend: function(instanceId, bufferPtr, length) {
 	
 		var instance = webSocketState.instances[instanceId];
-		if (!instance) throw new Error("Instance not found.");
+		if (!instance) return -1;
 		
 		if (instance.ws === null)
-			throw new Error("WebSocket is not connected.");
+			return -3;
 
 		if (instance.ws.readyState !== 1)
-			throw new Error("WebSocket is not in open state.");
+			return -6;
 
 		instance.ws.send(HEAPU8.buffer.slice(bufferPtr, bufferPtr + length));
+
+		return 0;
 
 	},
 
@@ -232,12 +242,12 @@ var LibraryWebSocket = {
 	WebSocketGetState: function(instanceId) {
 
 		var instance = webSocketState.instances[instanceId];
-		if (!instance) throw new Error("Instance not found.");
+		if (!instance) return -1;
 
 		if (instance.ws)
 			return instance.ws.readyState;
 		else
-			return 3;
+			return -3;
 
 	}
 

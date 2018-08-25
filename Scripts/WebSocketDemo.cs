@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
+// Use plugin namespace
+using HybridWebSocket;
+
 public class WebSocketDemo : MonoBehaviour {
 
 	// Use this for initialization
@@ -35,9 +38,9 @@ public class WebSocketDemo : MonoBehaviour {
         };
 
         // Add OnClose event listener
-        ws.OnClose += () =>
+        ws.OnClose += (WebSocketCloseCode code) =>
         {
-            Debug.Log("WS closed.");
+            Debug.Log("WS closed with code: " + code.ToString());
         };
 
         // Connect to the server
