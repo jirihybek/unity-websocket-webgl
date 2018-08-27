@@ -37,6 +37,7 @@ namespace HybridWebSocket
      */
     public enum WebSocketCloseCode
     {
+        /* Do NOT use NotSet - it's only purpose is to indicate that the close code cannot be parsed. */
         NotSet = 0,
         Normal = 1000,
         Away = 1001,
@@ -62,7 +63,7 @@ namespace HybridWebSocket
         void Connect();
 
         /* Close connection */
-        void Close();
+        void Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null);
 
         /* Send binary data over the socket */
         void Send(byte[] data);
@@ -117,6 +118,7 @@ namespace HybridWebSocket
                 case -4: return "WebSocket is already closing.";
                 case -5: return "WebSocket is already closed.";
                 case -6: return "WebSocket is not in open state.";
+                case -7: return "Cannot close WebSocket. An invalid code was specified or reason is too long.";
                 default: return "Unknown error.";
 
             }
@@ -159,7 +161,7 @@ namespace HybridWebSocket
         public static extern int WebSocketConnect(int instanceId);
 
         [DllImport("__Internal")]
-        public static extern int WebSocketClose(int instanceId);
+        public static extern int WebSocketClose(int instanceId, int code, string reason);
 
         [DllImport("__Internal")]
         public static extern int WebSocketSend(int instanceId, byte[] dataPtr, int dataLength);
@@ -222,10 +224,10 @@ namespace HybridWebSocket
         /*
          * Close connection
          */
-        public void Close()
+        public void Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
         {
 
-            int ret = WebSocketClose(this.instanceId);
+            int ret = WebSocketClose(this.instanceId, (int)code, reason);
 
             if (ret < 0)
                 throw new WebSocketException(
@@ -412,7 +414,7 @@ namespace HybridWebSocket
         /*
          * Close connection
          */
-        public void Close()
+        public void Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
         {
 
             // Check state
@@ -424,7 +426,7 @@ namespace HybridWebSocket
 
             try
             {
-                this.ws.CloseAsync();
+                this.ws.CloseAsync((ushort)code, reason);
             }
             catch (Exception e)
             {

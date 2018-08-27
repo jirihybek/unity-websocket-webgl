@@ -143,6 +143,9 @@ var LibraryWebSocket = {
 
 		instance.ws.onmessage = function(ev) {
 
+			if (webSocketState.onMessage === null)
+				return;
+
 			if (ev.data instanceof ArrayBuffer) {
 
 				var dataBuffer = new Uint8Array(ev.data);
@@ -150,8 +153,11 @@ var LibraryWebSocket = {
 				var buffer = _malloc(dataBuffer.length);
 				HEAPU8.set(dataBuffer, buffer);
 
-				if (webSocketState.onMessage)
+				try {
 					Runtime.dynCall('viii', webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+				} finally {
+					_free(buffer);
+				}
 
 			}
 
@@ -166,7 +172,11 @@ var LibraryWebSocket = {
 				var msgBuffer = _malloc(msgBytes + 1);
 				stringToUTF8(msg, msgBuffer, msgBytes);
 
-				Runtime.dynCall('vii', webSocketState.onError, [ instanceId, msgBuffer ]);
+				try {
+					Runtime.dynCall('vii', webSocketState.onError, [ instanceId, msgBuffer ]);
+				} finally {
+					_free(msgBuffer);
+				}
 
 			}
 
@@ -189,8 +199,10 @@ var LibraryWebSocket = {
 	 * Close WebSocket connection
 	 * 
 	 * @param instanceId Instance ID
+	 * @param code Close status code
+	 * @param reasonPtr Pointer to reason string
 	 */
-	WebSocketClose: function(instanceId) {
+	WebSocketClose: function(instanceId, code, reasonPtr) {
 
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
@@ -204,7 +216,13 @@ var LibraryWebSocket = {
 		if (instance.ws.readyState === 3)
 			return -5;
 
-		instance.ws.close();
+		var reason = ( reasonPtr ? Pointer_stringify(reasonPtr) : undefined );
+		
+		try {
+			instance.ws.close(code, reason);
+		} catch(err) {
+			return -7;
+		}
 
 		return 0;
 
