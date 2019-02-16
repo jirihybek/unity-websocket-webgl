@@ -255,7 +255,7 @@ var LibraryWebSocket = {
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 		
-		if (instance.ws === null)
+		if (!instance.ws)
 			return -3;
 
 		if (instance.ws.readyState !== 1)
