@@ -92,6 +92,13 @@ namespace HybridWebSocket
         void Send(byte[] data);
 
         /// <summary>
+        /// Send binary data over the socket.
+        /// </summary>
+        /// <param name="data">Payload data.</param>
+        /// <param name="count">The maximum number of bytes to send from the payload data.</param>
+        void Send(byte[] data, int count);
+
+        /// <summary>
         /// Return WebSocket connection state.
         /// </summary>
         /// <returns>The state.</returns>
@@ -349,6 +356,21 @@ namespace HybridWebSocket
         }
 
         /// <summary>
+        /// Send binary data over the socket.
+        /// </summary>
+        /// <param name="data">Payload data.</param>
+        /// <param name="count">The maximum number of bytes to send from the payload data.</param>
+        public void Send(byte[] data, int count)
+        {
+
+            int ret = WebSocketSend(this.instanceId, data, count);
+
+            if (ret < 0)
+                throw WebSocketHelpers.GetErrorMessageFromCode(ret, null);
+
+        }
+
+        /// <summary>
         /// Return WebSocket connection state.
         /// </summary>
         /// <returns>The state.</returns>
@@ -568,6 +590,38 @@ namespace HybridWebSocket
             try
             {
                 this.ws.Send(data);
+            }
+            catch (Exception e)
+            {
+                throw new WebSocketUnexpectedException("Failed to send message.", e);
+            }
+
+        }
+
+        /// <summary>
+        /// Send binary data over the socket.
+        /// </summary>
+        /// <param name="data">Payload data.</param>
+        /// <param name="count">The maximum number of bytes to send from the payload data.</param>
+        public void Send(byte[] data, int count)
+        {
+
+            // Check state
+            if (this.ws.ReadyState != WebSocketSharp.WebSocketState.Open)
+                throw new WebSocketInvalidStateException("WebSocket is not in open state.");
+
+            try
+            {
+                if (data.Length != count)
+                {
+                    byte[] payload = new byte[count];
+                    Array.Copy(data, 0, payload, 0, count);
+                    this.ws.Send(payload);
+                }
+                else
+                {
+                    this.ws.Send(data);
+                }
             }
             catch (Exception e)
             {
