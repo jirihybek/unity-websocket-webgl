@@ -155,7 +155,31 @@ var LibraryWebSocket = {
 			if (webSocketState.onMessage === null)
 				return;
 
-			if (ev.data instanceof ArrayBuffer) {
+			if (ev.data instanceof Blob)
+			{
+				var blob = event.data;
+	
+				//通过FileReader读取数据
+				var reader = new FileReader();
+	
+				//以下这两种方式我都可以解析出来，因为Blob对象的数据可以按文本或二进制的格式进行读取
+				reader.readAsArrayBuffer(blob);
+				//reader.readAsText(blob, 'utf8');
+	
+				reader.onload = function () {
+					var receive_data = this.result;//这个就是解析出来的数据
+					console.log("[JSLIB WebSocket] message type: ", typeof receive_data, receive_data)
+					var dataBuffer = new Uint8Array(receive_data);
+					var buffer = _malloc(dataBuffer.length);
+					HEAPU8.set(dataBuffer, buffer);
+					try {
+						Module.dynCall_viii(webSocketManager.onMessage, instanceId, buffer, dataBuffer.length)
+					}
+					finally { _free(buffer) }
+				}
+
+			}
+			else if (ev.data instanceof ArrayBuffer) {
 
 				var dataBuffer = new Uint8Array(ev.data);
 				
