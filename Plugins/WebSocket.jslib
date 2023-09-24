@@ -29,7 +29,7 @@ var LibraryWebSocket = {
 		onClose: null,
 
 		/* Debug mode */
-		debug: false
+		debug: true
 	},
 
 	/**
@@ -127,6 +127,15 @@ var LibraryWebSocket = {
 	 */
 	WebSocketConnect: function(instanceId) {
 
+		// fix for unity 2021 because unity bug in .jslib
+		if (typeof Runtime === "undefined") {
+			// if unity doesn't create Runtime, then make it here
+			// dont ask why this works, just be happy that it does
+			Runtime = {
+				dynCall: dynCall
+			}
+		}
+
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 
@@ -143,7 +152,8 @@ var LibraryWebSocket = {
 				console.log("[JSLIB WebSocket] Connected.");
 
 			if (webSocketState.onOpen)
-				Module['dynCall_vi'](webSocketState.onOpen, [ instanceId ]);
+				Runtime.dynCall('vi', webSocketState.onOpen, [ instanceId ]);
+				//Module['dynCall_vi'](webSocketState.onOpen, [ instanceId ]);
 
 		};
 
@@ -156,14 +166,15 @@ var LibraryWebSocket = {
 				return;
 
 			if (ev.data instanceof ArrayBuffer) {
-
+				console.log("[JSLIB WebSocket] Received ArrayBuffer");
 				var dataBuffer = new Uint8Array(ev.data);
 				
 				var buffer = _malloc(dataBuffer.length);
 				HEAPU8.set(dataBuffer, buffer);
 
 				try {
-					Module['dynCall_viii']( webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+					Runtime.dynCall('viii', webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+					//Module['dynCall_viii']( webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
 				} finally {
 					_free(buffer);
 				}
@@ -177,11 +188,12 @@ var LibraryWebSocket = {
 				var buffer = _malloc(dataBuffer.length);
 				HEAPU8.set(dataBuffer, buffer);
 				try {
-				Runtime.dynCall("viii", webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+					Runtime.dynCall('viii', webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+					//Module['dynCall_viii']( webSocketState.onMessage,[ instanceId, buffer, dataBuffer.length ]);
 				} finally {
-				_free(buffer);
+					_free(buffer);
+				}
 			}
-      }
 
 		};
 
@@ -198,7 +210,8 @@ var LibraryWebSocket = {
 				stringToUTF8(msg, msgBuffer, msgBytes);
 
 				try {
-					Module['dynCall_vii']( webSocketState.onError, [ instanceId, msgBuffer ]);
+					Runtime.dynCall('vii', webSocketState.onError, [ instanceId, msgBuffer ]);
+					//Module['dynCall_vii']( webSocketState.onError, [ instanceId, msgBuffer ]);
 				} finally {
 					_free(msgBuffer);
 				}
@@ -210,10 +223,11 @@ var LibraryWebSocket = {
 		instance.ws.onclose = function(ev) {
 
 			if (webSocketState.debug)
-				console.log("[JSLIB WebSocket] Closed.");
+				console.log("[JSLIB WebSocket] Closed." + ev.code);
 
 			if (webSocketState.onClose)
-				Module['dynCall_vii']( webSocketState.onClose, [ instanceId, ev.code ]);
+				Runtime.dynCall('vii', webSocketState.onClose, [ instanceId, ev.code ]);
+				//Module['dynCall_vii']( webSocketState.onClose, [ instanceId, ev.code ]);
 
 			delete instance.ws;
 
@@ -264,7 +278,7 @@ var LibraryWebSocket = {
 	 * @param length Length of the message in the buffer
 	 */
 	WebSocketSend: function(instanceId, bufferPtr, length) {
-	
+		console.log(instanceId, bufferPtr, length)
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 		
